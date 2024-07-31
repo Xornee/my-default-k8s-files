@@ -1,0 +1,35 @@
+apiVersion: v1  # Defines the version of the Kubernetes API to use
+kind: Service  # Specifies that this is a Service resource
+metadata:
+  name: example-loadbalancer  # Name of the Service, must be unique within the namespace
+  namespace: default  # Namespace in which the Service is created, defaults to "default" if not specified
+  labels:  # Key/value pairs that are attached to the Service, useful for organizing and selecting subsets
+    app: example
+spec:
+  type: LoadBalancer  # Specifies that this Service will be exposed externally via a cloud provider's load balancer
+  ports:
+    - name: http  # Name of the port, purely informational
+      protocol: TCP  # Protocol used by the service, TCP or UDP
+      port: 80  # Port on which the service is exposed internally in the cluster
+      targetPort: 8080  # Port on the pod targeted by the service
+      nodePort: 30080  # Specific port on the nodes on which the service is exposed (optional, if not specified, auto-assigned)
+  selector:
+    app: example-app  # Selector labels used to find the pods that the service should route traffic to
+  clusterIP: None  # Specifies that service does not have a cluster IP, "None" makes this a headless service, useful for stateful applications
+  externalTrafficPolicy: Local  # Can be "Local" or "Cluster"; "Local" preserves the client source IP
+  sessionAffinity: ClientIP  # Enables client IP based session affinity; can also be "None"
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800  # Time, in seconds, the affinity will persist (default is 10800, which is 3 hours)
+  loadBalancerIP: 192.168.1.100  # Optionally specify a specific IP address for the load balancer (cloud provider must support this)
+  loadBalancerSourceRanges:
+    - 192.168.0.0/16  # CIDR ranges allowed access to the load balancer
+  externalIPs:
+    - 192.168.100.1  # Additional external IPs to be associated with the Service
+  healthCheckNodePort: 30200  # Specifies a node port for the health check; only necessary if using "externalTrafficPolicy: Local"
+  allocateLoadBalancerNodePorts: true  # If true, allocate node ports for LoadBalancer services (default is true)
+  publishNotReadyAddresses: false  # If true, traffic will not be routed to pods that are not in a ready state
+  ipFamilyPolicy: "SingleStack"  # IP family policy (SingleStack, RequireDualStack, or PreferDualStack)
+  ipFamilies:
+    - IPv4  # List of IP families used for this service. Depending on cluster configuration, it can be IPv4 or IPv6
+
