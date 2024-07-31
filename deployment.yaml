@@ -1,0 +1,93 @@
+apiVersion: apps/v1  # Specifies the API group and version for the Deployment resource.
+kind: Deployment  # Specifies that this is a Deployment resource.
+metadata:
+  name: example-deployment  # Name of the Deployment, unique within the namespace.
+  namespace: default  # The namespace in which the Deployment is created.
+  labels:
+    app: example-app  # Labels to identify and categorize the Deployment.
+  annotations:
+    description: "An advanced example Deployment"  # Additional information about the Deployment as metadata.
+spec:
+  replicas: 3  # Specifies the number of desired pods.
+  selector:
+    matchLabels:
+      app: example-app  # Selector that determines which pods are controlled by this Deployment.
+  minReadySeconds: 10  # Minimum number of seconds for which a new pod should be ready without failing, to be considered available.
+  strategy:
+    type: RollingUpdate  # Deployment strategy to replace old Pods with new ones.
+    rollingUpdate:
+      maxSurge: 1  # Maximum number of pods that can be scheduled above the desired number of pods.
+      maxUnavailable: 1  # Maximum number of pods that can be unavailable during the update.
+  paused: false  # Whether the Deployment is paused; if true, no updates to the Deployment are processed.
+  progressDeadlineSeconds: 600  # Number of seconds to wait for the Deployment to progress before marking it as failed.
+  revisionHistoryLimit: 10  # Number of old ReplicaSets to keep.
+  template:
+    metadata:
+      labels:
+        app: example-app  # Labels to be applied to the pods created by this Deployment.
+      annotations:
+        description: "Pod template for the example Deployment"  # Annotations for pods created by this Deployment.
+    spec:
+      containers:
+        - name: example-container  # Name of the container in the pod.
+          image: nginx:latest  # The container image to use.
+          ports:
+            - containerPort: 80  # Port the container exposes.
+          env:
+            - name: ENV_VAR  # Name of an environment variable.
+              value: "example_value"  # Value of the environment variable.
+          resources:
+            requests:
+              cpu: "250m"  # Minimum amount of CPU requested for the container.
+              memory: "64Mi"  # Minimum amount of memory requested for the container.
+            limits:
+              cpu: "500m"  # Maximum amount of CPU allowed for the container.
+              memory: "128Mi"  # Maximum amount of memory allowed for the container.
+          volumeMounts:
+            - name: config-volume  # The volume to mount into the container.
+              mountPath: "/config"  # Path where the volume is mounted inside the container.
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 80  # Port used for the liveness probe.
+            initialDelaySeconds: 15  # Delay before the liveness probe is initiated.
+            timeoutSeconds: 2  # Timeout for the liveness probe.
+            periodSeconds: 5  # Frequency of the liveness probe.
+            successThreshold: 1  # Minimum consecutive successes for the probe to be considered successful.
+            failureThreshold: 3  # Number of failures required to fail the probe.
+          readinessProbe:
+            tcpSocket:
+              port: 80  # Port used for the readiness probe.
+            initialDelaySeconds: 5  # Delay before the readiness probe is initiated.
+            timeoutSeconds: 2  # Timeout for the readiness probe.
+            periodSeconds: 5  # Frequency of the readiness probe.
+            successThreshold: 1  # Minimum consecutive successes for the probe to be considered successful.
+            failureThreshold: 3  # Number of failures required to consider the probe failed.
+      volumes:
+        - name: config-volume
+          configMap:
+            name: example-config-map  # Name of the ConfigMap used as a volume.
+      restartPolicy: Always  # Restart policy for all containers within the pod.
+      serviceAccountName: default  # The name of the ServiceAccount to use for this pod.
+      automountServiceAccountToken: true  # Whether to automatically mount the service account token.
+      nodeName: node-name  # Name of the node to schedule this pod onto, if specific scheduling is required.
+      securityContext:
+        runAsUser: 1000  # UID to run the entrypoint of the container process.
+        runAsGroup: 3000  # GID to run the entrypoint of the container process.
+        fsGroup: 2000  # GID for the volumes mounted into the pod.
+      imagePullSecrets:
+        - name: myregistrykey  # Secret used to pull private images.
+      hostAliases:
+        - ip: "192.168.1.100"  # Custom host-IP mappings.
+          hostnames:
+            - "foo.local"
+            - "bar.local"
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: disktype
+                    operator: In
+                    values:
+                      - ssd  # Example of setting node affinity based on disk type.
