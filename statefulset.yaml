@@ -1,0 +1,106 @@
+apiVersion: apps/v1  # Specifies the API group and version for the StatefulSet resource.
+kind: StatefulSet  # Specifies that this is a StatefulSet resource.
+metadata:
+  name: example-statefulset  # Name of the StatefulSet, unique within the namespace.
+  namespace: default  # The namespace in which the StatefulSet is created.
+  labels:
+    app: example-app  # Labels to identify and categorize the StatefulSet.
+  annotations:
+    description: "An advanced example StatefulSet"  # Additional information about the StatefulSet as metadata.
+spec:
+  replicas: 3  # Specifies the number of desired pods in the StatefulSet.
+  selector:
+    matchLabels:
+      app: example-app  # Selector that determines which pods are controlled by this StatefulSet.
+  serviceName: example-headless-service  # Name of the headless service to which the StatefulSet will be associated.
+  podManagementPolicy: OrderedReady  # Policy for managing the creation and deletion of pods. Options: OrderedReady, Parallel.
+  updateStrategy:
+    type: RollingUpdate  # Strategy for updating the StatefulSet. Options: RollingUpdate, OnDelete.
+    rollingUpdate:
+      partition: 0  # Specifies the ordinal at which the StatefulSet should be partitioned.
+  revisionHistoryLimit: 10  # Number of old ReplicaSets to retain for rollback.
+  volumeClaimTemplates:  # List of PVC templates to be used by the StatefulSet.
+  - metadata:
+      name: example-storage  # Name of the PersistentVolumeClaim.
+      annotations:
+        volume.beta.kubernetes.io/storage-class: "standard"  # Storage class to use for the PVC.
+    spec:
+      accessModes: [ "ReadWriteOnce" ]  # Access modes for the PVC. Options: ReadWriteOnce, ReadOnlyMany, ReadWriteMany.
+      resources:
+        requests:
+          storage: 10Gi  # Storage request for the PVC.
+  template:
+    metadata:
+      labels:
+        app: example-app  # Labels to be applied to the pods created by this StatefulSet.
+      annotations:
+        description: "Pod template for the example StatefulSet"  # Annotations for pods created by this StatefulSet.
+    spec:
+      containers:
+      - name: example-container  # Name of the container.
+        image: nginx:latest  # Container image to be used.
+        imagePullPolicy: IfNotPresent  # Policy for pulling the container image. Options: Always, IfNotPresent, Never.
+        ports:
+        - containerPort: 80  # Port to be exposed by the container.
+          protocol: TCP  # Protocol used by the port. Options: TCP, UDP.
+        env:
+        - name: EXAMPLE_ENV_VAR  # Name of the environment variable.
+          value: "example-value"  # Value of the environment variable.
+        resources:
+          limits:
+            cpu: "500m"  # Maximum CPU limit for the container.
+            memory: "512Mi"  # Maximum memory limit for the container.
+          requests:
+            cpu: "250m"  # Minimum CPU request for the container.
+            memory: "256Mi"  # Minimum memory request for the container.
+        volumeMounts:
+        - name: example-storage  # Name of the volume to be mounted.
+          mountPath: /usr/share/nginx/html  # Path where the volume will be mounted in the container.
+      initContainers:  # List of init containers to be run before the main containers.
+      - name: init-example
+        image: busybox:1.28
+        command: ['sh', '-c', 'echo The init container is running; sleep 5;']
+        volumeMounts:
+        - name: example-storage
+          mountPath: /usr/share/nginx/html
+      terminationGracePeriodSeconds: 30  # Time to wait before forcefully terminating the pod.
+      affinity:  # Affinity rules for pod placement.
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/e2e-az-name
+                operator: In
+                values:
+                - e2e-az1
+                - e2e-az2
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: security
+                operator: In
+                values:
+                - S1
+            topologyKey: kubernetes.io/hostname
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - example-app
+            topologyKey: kubernetes.io/hostname
+      tolerations:  # Tolerations for taints on nodes.
+      - key: "key1"
+        operator: "Equal"
+        value: "value1"
+        effect: "NoSchedule"
+      securityContext:  # Security context for the pod.
+        runAsUser: 1000
+        fsGroup: 2000
+      volumes:  # Volumes to be used by the pod.
+      - name: example-storage
+        persistentVolumeClaim:
+          claimName: example-storage
