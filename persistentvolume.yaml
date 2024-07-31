@@ -1,0 +1,35 @@
+apiVersion: v1 # The API version for the PersistentVolume resource
+kind: PersistentVolume # Specifies the kind of resource, here it's a PersistentVolume
+metadata:
+  name: example-pv # The name of the persistent volume
+  labels:
+    type: local # Labels that can be used for selecting and organizing resources
+  annotations:
+    example.com/annotation: "This is an example annotation" # Annotations can be used to store additional metadata
+spec:
+  capacity:
+    storage: 10Gi # The amount of storage space allocated to the PV
+  volumeMode: Filesystem # The volume mode defines if the volume is intended to be used as a block device or as a file system. Can be either 'Filesystem' or 'Block'
+  accessModes: 
+    - ReadWriteOnce # Defines the access modes. Options are 'ReadWriteOnce', 'ReadOnlyMany', 'ReadWriteMany'
+  persistentVolumeReclaimPolicy: Retain # Policy for retaining, recycling, or deleting the PV. Options are 'Retain', 'Recycle', and 'Delete'
+  storageClassName: "standard" # Name of the StorageClass associated with this PV
+  mountOptions: 
+    - hard # Mount options that can be used when mounting the volume
+    - nfsvers=4.1
+  nodeAffinity: 
+    required: 
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: "key1"
+              operator: In # Operator can be In, NotIn, Exists, DoesNotExist, Gt, Lt
+              values:
+                - "value1" # Values are the criteria used for selection
+                - "value2"
+  claimRef: 
+    namespace: default # The namespace of the PVC that is bound to the PV
+    name: example-pvc # The name of the PVC that is bound to the PV
+  nfs: # The type of volume, here NFS. Other types could be 'iscsi', 'glusterfs', 'gcePersistentDisk', etc.
+    path: /tmp # The path that is exported by the NFS server
+    server: nfs-server.example.com # The hostname or IP address of the NFS server
+    readOnly: false # Indicates if the volume should be mounted read-only
