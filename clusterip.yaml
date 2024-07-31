@@ -1,0 +1,43 @@
+apiVersion: v1  # The API version for the service
+kind: Service  # The kind of the Kubernetes object, in this case, a Service
+metadata:
+  name: example-service  # The name of the service, used as a unique identifier within a namespace
+  namespace: default  # Defines the namespace this service resides in
+  labels:
+    app: example  # Key-value pairs that can be used to organize and select subsets of objects
+  annotations:
+    description: "An example ClusterIP service"  # Non-identifying metadata used by tools and libraries
+spec:
+  type: ClusterIP  # The type of service, ClusterIP exposes the service on an internal IP in the cluster
+  clusterIP: None  # 'None' makes this a "headless" service when not needing load-balancing and a single service IP
+  clusterIPs:
+    - None  # List of cluster IPs assigned to the service, useful for dual-stack (IPv4 and IPv6)
+  externalIPs:
+    - 192.168.10.10  # IP addresses that the service will be accessible on from outside the cluster
+  selector:
+    app: example-app  # Selector queries label on pods that the service should target
+  ports:
+    - name: http  # Optional name for the port, useful when multiple ports are defined
+      protocol: TCP  # Protocol used by the service, e.g., TCP, UDP, SCTP
+      port: 80  # The port that the service exposes
+      targetPort: 9376  # The port on the pod targeted by the service
+      nodePort: 30000  # The port on the node where external traffic will come in on; only valid for NodePort and LoadBalancer
+  publishNotReadyAddresses: false  # Indicates whether traffic should be routed to pods that are not yet ready
+  sessionAffinity: None  # Controls whether the service should stick client requests to specific pods (None or ClientIP)
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800  # Time, in seconds, that the session affinity should persist
+  externalTrafficPolicy: Cluster  # Denotes if external traffic should be routed to node-local or cluster-wide endpoints
+  healthCheckNodePort: 32000  # Specifies the health check node port for the service; only used when type is LoadBalancer and externalTrafficPolicy is set to Local
+  allocateLoadBalancerNodePorts: true  # Indicates whether NodePorts will be automatically allocated for LoadBalancer services
+  loadBalancerIP: 192.168.10.100  # The specific IP to request as the load balancer IP
+  loadBalancerSourceRanges:
+    - 192.168.0.0/16  # A list of CIDR ranges that are allowed to access the load balancer
+  ipFamilies:
+    - IPv4  # Specifies which IP families are assigned to the service (IPv4 or IPv6)
+  ipFamilyPolicy: SingleStack  # Determines whether the service supports a single IP family or dual-stack
+  topologyKeys:
+    - "kubernetes.io/hostname"  # Used to specify which topology domain(s) the service endpoints should be restricted to
+  internalTrafficPolicy: Local  # Specifies how traffic from inside the cluster will be routed to endpoints (Local or Cluster)
+  sessionAffinityTtlSeconds: 3600  # Optional, controls the time-to-live seconds for session-affinity
+
