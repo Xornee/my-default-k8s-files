@@ -1,0 +1,83 @@
+apiVersion: apps/v1  # Specifies the API group and version for the DaemonSet resource.
+kind: DaemonSet  # Specifies that this is a DaemonSet resource.
+metadata:
+  name: example-daemonset  # Name of the DaemonSet, unique within the namespace.
+  namespace: default  # The namespace in which the DaemonSet is created.
+  labels:
+    app: example-app  # Labels to identify and categorize the DaemonSet.
+  annotations:
+    description: "An advanced example DaemonSet"  # Additional information about the DaemonSet as metadata.
+spec:
+  selector:
+    matchLabels:
+      app: example-app  # Selector that determines which pods are controlled by this DaemonSet.
+  updateStrategy:  # Specifies the update strategy for the DaemonSet.
+    type: RollingUpdate  # Update strategy type. Options are RollingUpdate and OnDelete.
+    rollingUpdate:
+      maxUnavailable: 1  # Maximum number of DaemonSet pods that can be unavailable during the update.
+  minReadySeconds: 10  # Minimum number of seconds for which a new pod should be ready without any of its containers crashing.
+  revisionHistoryLimit: 10  # Number of old DaemonSet revisions to retain for rollback purposes.
+  template:
+    metadata:
+      name: example-pod  # Name of the pod template.
+      labels:
+        app: example-app  # Labels to be applied to the pods created by this DaemonSet.
+      annotations:
+        description: "Pod template for the example DaemonSet"  # Annotations for pods created by this DaemonSet.
+    spec:
+      containers:
+      - name: example-container  # Name of the container.
+        image: example-image:latest  # Container image to use.
+        imagePullPolicy: Always  # Policy for pulling the container image. Options are Always, IfNotPresent, and Never.
+        ports:
+        - containerPort: 80  # Port number to expose on the container.
+          protocol: TCP  # Protocol used by the port. Options are TCP and UDP.
+        env:  # Environment variables for the container.
+        - name: EXAMPLE_ENV  # Name of the environment variable.
+          value: example-value  # Value of the environment variable.
+        resources:  # Resource requests and limits for the container.
+          requests:
+            memory: "64Mi"  # Memory request for the container.
+            cpu: "250m"  # CPU request for the container.
+          limits:
+            memory: "128Mi"  # Memory limit for the container.
+            cpu: "500m"  # CPU limit for the container.
+        volumeMounts:  # Volumes to mount into the container's filesystem.
+        - name: example-volume  # Name of the volume.
+          mountPath: /example-path  # Path where the volume will be mounted inside the container.
+      initContainers:  # Init containers to run before the main containers.
+      - name: init-example-container  # Name of the init container.
+        image: init-example-image:latest  # Init container image to use.
+        resources:  # Resource requests and limits for the init container.
+          requests:
+            memory: "32Mi"  # Memory request for the init container.
+            cpu: "100m"  # CPU request for the init container.
+          limits:
+            memory: "64Mi"  # Memory limit for the init container.
+            cpu: "200m"  # CPU limit for the init container.
+      volumes:  # Volumes to be used by the pod.
+      - name: example-volume  # Name of the volume.
+        emptyDir: {}  # EmptyDir volume type.
+      affinity:  # Node affinity settings for scheduling the pods.
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: example-key
+                operator: In
+                values:
+                - example-value
+      tolerations:  # Tolerations for taints on nodes.
+      - key: example-key  # Key for the taint.
+        operator: Exists  # Operator for the taint. Options are Exists and Equal.
+        effect: NoSchedule  # Effect of the taint. Options are NoSchedule, PreferNoSchedule, and NoExecute.
+      nodeSelector:  # Node selector to specify the nodes on which to run the pods.
+        example-node-label: example-value
+      securityContext:  # Security context for the pod.
+        runAsUser: 1000  # User ID to run the containers as.
+        fsGroup: 2000  # Group ID to use for filesystem permissions.
+      serviceAccountName: example-service-account  # Service account to use for the pod.
+      hostNetwork: true  # Whether to use the host's network namespace.
+      hostPID: false  # Whether to use the host's PID namespace.
+      hostIPC: false  # Whether to use the host's IPC namespace.
+      dnsPolicy: ClusterFirstWithHostNet  # DNS policy for the pod. Options are ClusterFirstWithHostNet, ClusterFirst, and Default.
