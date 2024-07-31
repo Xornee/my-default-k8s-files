@@ -1,0 +1,22 @@
+apiVersion: v1  # API version for the ConfigMap, v1 for core Kubernetes types
+kind: ConfigMap  # Specifies this resource is a ConfigMap
+metadata:
+  name: example-configmap  # Unique name of the ConfigMap within a namespace
+  namespace: default  # Namespace to which this ConfigMap belongs, default if not specified
+  labels:
+    app: myapp  # Key-value pairs that allow you to identify and organize your resources
+    environment: production  
+  annotations:
+    description: "This ConfigMap is for storing configuration data."  # Non-identifying metadata, can be used to store detailed information
+data:
+  # Key-value pairs containing the configuration data
+  config.json: |
+    {
+      "key": "value",
+      "items": ["item1", "item2"]
+    }
+  another.config: "Some more configuration text"
+binaryData:
+  # Contains binary data as a base64-encoded string
+  file1: Base64_encoded_binary_data  # Example for binary file content encoded in base64
+immutable: false  # If set to true, entries in the ConfigMap cannot be changed after creation
