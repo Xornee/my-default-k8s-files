@@ -1,0 +1,33 @@
+apiVersion: v1 # Specifies the API version, for PVC "v1" is used
+kind: PersistentVolumeClaim # Specifies the kind of object, in this case, a PersistentVolumeClaim
+metadata:
+  name: example-pvc # The name of the PVC, unique within the namespace
+  namespace: default # The namespace in which the PVC will be created
+  labels:
+    app: myapp # Key-value pairs that can be used to organize and categorize the PVC
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "my-storage-class" # Optional annotations can be used to associate metadata with the PVC
+
+spec:
+  accessModes: # Describes how the volume can be mounted
+    - ReadWriteOnce # The volume can be mounted as read-write by a single node
+    - ReadOnlyMany # Optionally, could also be accessed in read-only mode by many nodes
+    - ReadWriteMany # Optionally, could also be accessed in read-write mode by many nodes
+  resources:
+    requests:
+      storage: 10Gi # The amount of storage requested
+  storageClassName: "fast" # Specifies the StorageClass associated with this PVC
+  volumeMode: Filesystem # Can be either 'Filesystem' or 'Block'
+  selector:
+    matchLabels:
+      disktype: ssd # Selector to match a specific label on the PersistentVolume
+    matchExpressions:
+      - {key: environment, operator: In, values: [dev, prod]} # More complex expression to select the PV
+  dataSource:
+    kind: PersistentVolumeClaim # Kind of the data source, here a PVC for cloning
+    name: existing-pvc-to-clone # Name of the existing PVC to clone
+    apiGroup: "" # Specify the API group of the referred resource
+  dataSourceRef:
+    kind: Snapshot
+    name: snapshot-name # Name of the snapshot to use as source for the volume
+    apiGroup: snapshot.storage.k8s.io # API group for volume snapshots
